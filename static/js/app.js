@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
+            formData.append('file', fileInput.files[0]);
             
             const response = await fetch(WEBHOOK_URL, {
                 method: 'POST',
