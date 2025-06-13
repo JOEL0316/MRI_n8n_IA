@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroScan - Diagnóstico de Tumores Cerebrales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-brain"></i> NeuroScan</h1>
+            <p class="subtitle">Diagnóstico avanzado de tumores cerebrales mediante inteligencia artificial</p>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="card">
+            <h2><i class="fas fa-upload"></i> Subir imagen de resonancia magnética</h2>
+            <p>Seleccione una imagen MRI en formato JPG, PNG o DICOM para analizar</p>
+            
+            <form id="predict-form" class="upload-form">
+                <div class="form-group">
+                    <input type="file" id="image" name="image" accept="image/*" class="file-input" required>
+                    <label for="image" class="file-label">
+                        <div>
+                            <i class="fas fa-file-image"></i>
+                            <p id="file-name">Haz clic para seleccionar una imagen</p>
+                            <small class="text-muted">Formatos soportados: .jpg, .png, .dcm</small>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="loading-container" id="loading-container">
+                    <div class="loading-bar" id="loading-bar"></div>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-search"></i> Analizar Imagen
+                </button>
+            </form>
+        </div>
+        
+        <div id="error-container" class="error-card" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i> 
+            <div id="error-message"></div>
+        </div>
+        
+        <div id="result-container" class="result-container" style="display: none;">
+            <div class="result-card">
+                <h2 class="result-title"><i class="fas fa-clipboard-check"></i> Resultados del análisis</h2>
+                <p><strong>Diagnóstico:</strong> <span id="result-text">
+                    <i class="fas fa-check-circle"></i> <span id="result-content">Resultado</span>
+                </span></p>
+                <p class="probability"><strong>Probabilidad de tumor:</strong> <span id="probability-value">0</span>%</p>
+            </div>
+            
+            <div class="comparison-section">
+                <h3 class="comparison-title"><i class="fas fa-images"></i> Comparación de imágenes</h3>
+                <div class="image-gallery">
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img id="original-image" src="" alt="Imagen procesada">
+                        </div>
+                        <h3><i class="fas fa-image"></i> Imagen Original</h3>
+                    </div>
+                    
+                    <div class="image-card" id="mask-card" style="display: none;">
+                        <div class="image-container">
+                            <img id="mask-image" src="" alt="Área detectada">
+                        </div>
+                        <h3><i class="fas fa-map-marked-alt"></i> Área Detectada</h3>
+                    </div>
+                    
+                    <div class="image-card" id="overlay-card" style="display: none;">
+                        <div class="image-container">
+                            <img id="overlay-image" src="" alt="Tumor destacado">
+                        </div>
+                        <h3><i class="fas fa-eye"></i> Tumor Destacado (Rojo)</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p><i class="fas fa-brain"></i> NeuroScan - Sistema de diagnóstico asistido por IA</p>
+            <p>© 2023 Todos los derechos reservados</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
