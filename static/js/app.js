@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultContainer = document.getElementById('result-container');
     
     // URL del webhook n8n - VERIFICAR QUE SEA CORRECTA
-    const WEBHOOK_URL = 'https://joeldelacruzr.app.n8n.cloud/webhook-test/mri-analysis';
+    const WEBHOOK_URL = 'https://joeldelacruzr.app.n8n.cloud/webhook/mri-analysis';
     
     // Evento para mostrar nombre de archivo seleccionado
     fileInput.addEventListener('change', function(e) {
