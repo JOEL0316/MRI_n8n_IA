@@ -32,15 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const formData = new FormData();
-            // Probar con 'file' o 'image' según lo que espere n8n
-            formData.append('image', fileInput.files[0]);
+            // Usar 'file' en lugar de 'image' para coincidir con el backend
+            formData.append('file', fileInput.files[0]);
             
             const response = await fetchWithTimeout(WEBHOOK_URL, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'Accept': 'application/json'
-                }
+                },
+                mode: 'cors'
             }, 30000); // 30 segundos de timeout
             
             const data = await processResponse(response);
@@ -88,17 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const data = JSON.parse(responseText);
-            console.log('Datos recibidos:', data); // Para diagnóstico
             
-            // Convertir array a objeto si es necesario
-            const responseData = Array.isArray(data) ? data[0] : data;
-            
-            // Validar estructura mínima
-            if (!responseData || typeof responseData !== 'object') {
-                throw new Error('Estructura de datos inválida');
-            }
-            
-            // Campos obligatorios
+            // Validar estructura de respuesta
             const requiredFields = {
                 result: 'string',
                 probability: 'number',
@@ -106,15 +98,15 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             for (const [field, type] of Object.entries(requiredFields)) {
-                if (responseData[field] === undefined) {
+                if (data[field] === undefined) {
                     throw new Error(`Falta el campo requerido: ${field}`);
                 }
-                if (typeof responseData[field] !== type) {
+                if (typeof data[field] !== type) {
                     throw new Error(`El campo ${field} debe ser ${type}`);
                 }
             }
             
-            return responseData;
+            return data;
             
         } catch (error) {
             throw new Error(`📛 Error procesando respuesta: ${error.message}`);
@@ -132,29 +124,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultSpan = document.getElementById('result-text');
         const icon = resultSpan.querySelector('i');
         
-        if (data.result.includes('Tumor detectado')) {
-            resultSpan.className = 'tumor-detected';
-            icon.className = 'fas fa-exclamation-circle';
-        } else {
-            resultSpan.className = 'no-tumor';
-            icon.className = 'fas fa-check-circle';
-        }
+        resultSpan.className = data.result.includes('Tumor detectado') ? 'tumor-detected' : 'no-tumor';
+        icon.className = data.result.includes('Tumor detectado') ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
         
         // Mostrar imágenes con manejo de errores
         displayImage('original-image', data.original_image, 'Imagen no disponible');
         
+        const maskCard = document.getElementById('mask-card');
+        const overlayCard = document.getElementById('overlay-card');
+        
         if (data.mask) {
             displayImage('mask-image', data.mask, 'Máscara no disponible');
-            document.getElementById('mask-card').style.display = 'block';
+            maskCard.style.display = 'block';
         } else {
-            document.getElementById('mask-card').style.display = 'none';
+            maskCard.style.display = 'none';
         }
         
         if (data.overlay_image) {
             displayImage('overlay-image', data.overlay_image, 'Superposición no disponible');
-            document.getElementById('overlay-card').style.display = 'block';
+            overlayCard.style.display = 'block';
         } else {
-            document.getElementById('overlay-card').style.display = 'none';
+            overlayCard.style.display = 'none';
         }
         
         resultContainer.style.display = 'block';
@@ -163,22 +153,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // 6. Mostrar imágenes
     function displayImage(elementId, src, errorMessage) {
         const imgElement = document.getElementById(elementId);
+        const container = imgElement.parentElement;
+        
         if (!src) {
-            imgElement.parentElement.innerHTML = `
+            container.innerHTML = `
                 <i class="fas fa-image" style="font-size:3rem;color:#ccc"></i>
                 <p>${errorMessage}</p>
             `;
             return;
         }
         
-        imgElement.src = src;
         imgElement.onerror = function() {
-            this.onerror = null;
-            this.parentElement.innerHTML = `
+            container.innerHTML = `
                 <i class="fas fa-image" style="font-size:3rem;color:#ccc"></i>
                 <p>${errorMessage}</p>
             `;
         };
+        
+        imgElement.src = src;
     }
     
     // 7. Manejar errores
@@ -189,7 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (error.message.includes('tardó demasiado')) userMessage = error.message;
         if (error.message.includes('conexión')) userMessage = error.message;
         if (error.message.includes('servidor')) userMessage = error.message;
-        if (error.message.includes('procesando')) userMessage = 'Formato de respuesta incorrecto';
+        if (error.message.includes('procesando')) userMessage = 'Error: El servidor devolvió una respuesta no válida';
+        if (error.message.includes('Falta el campo')) userMessage = 'Error: Configuración incorrecta del servidor';
         
         showError(userMessage);
     }
@@ -200,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
         loadingContainer.style.display = 'block';
         resultContainer.style.display = 'none';
+        errorContainer.style.display = 'none';
         
         let width = 0;
         const interval = setInterval(() => {
